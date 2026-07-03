@@ -213,22 +213,17 @@
             <Feature name="dynamic-color-aspects" />
             <Attribute name="software-codec" />
         </MediaCodec>
+        <!-- SW VP9/AV1 decode can't sustain realtime (no HW; heats/throttles). Caps
+             clamped to CIF so selectors prefer HW avc/hevc/vp8; VP9/AV1-only streams still
+             play via ExoPlayer's exceed-capabilities fallback (the C2 codec isn't limited). -->
         <MediaCodec name="c2.android.vp9.decoder" type="video/x-vnd.on2.vp9" variant="slow-cpu,!slow-cpu">
             <Alias name="OMX.google.vp9.decoder" />
             <Limit name="alignment" value="1x1" />
             <Limit name="block-size" value="16x16" />
-            <Variant name="!slow-cpu">
-                <Limit name="size" min="2x2" max="2048x2048" />
-                <Limit name="block-count" range="1-16384" />
-                <Limit name="blocks-per-second" range="1-500000" />
-                <Limit name="bitrate" range="1-40000000" />
-            </Variant>
-            <Variant name="slow-cpu">
-                <Limit name="size" min="2x2" max="1280x1280" />
-                <Limit name="block-count" range="1-3600" /> <!-- max 1280x720 -->
-                <Limit name="blocks-per-second" range="1-108000" />
-                <Limit name="bitrate" range="1-5000000" />
-            </Variant>
+            <Limit name="size" min="2x2" max="352x288" />
+            <Limit name="block-count" range="1-396" />
+            <Limit name="blocks-per-second" range="1-11880" />
+            <Limit name="bitrate" range="1-500000" />
             <Feature name="adaptive-playback" />
             <Feature name="dynamic-color-aspects" />
             <Attribute name="software-codec" />
@@ -236,39 +231,22 @@
         <MediaCodec name="c2.android.av1-dav1d.decoder" type="video/av01" variant="slow-cpu,!slow-cpu">
             <Limit name="alignment" value="1x1" />
             <Limit name="block-size" value="16x16" />
-            <Variant name="!slow-cpu">
-                <Limit name="size" min="2x2" max="2048x2048" />
-                <Limit name="block-count" range="1-8192" /> <!-- max 2048x1024 -->
-                <Limit name="blocks-per-second" range="1-245760" />
-                <Limit name="bitrate" range="1-40000000" />
-            </Variant>
-            <Variant name="slow-cpu">
-                <Limit name="size" min="2x2" max="1280x1280" />
-                <Limit name="block-count" range="1-3600" /> <!-- max 1280x720 -->
-                <Limit name="blocks-per-second" range="1-108000" />
-                <Limit name="bitrate" range="1-5000000" />
-            </Variant>
+            <Limit name="size" min="2x2" max="352x288" />
+            <Limit name="block-count" range="1-396" />
+            <Limit name="blocks-per-second" range="1-11880" />
+            <Limit name="bitrate" range="1-500000" />
             <Feature name="adaptive-playback" />
             <Feature name="dynamic-color-aspects" />
             <Feature name="low-latency" />
             <Attribute name="software-codec" />
         </MediaCodec>
         <MediaCodec name="c2.android.av1.decoder" type="video/av01" variant="slow-cpu,!slow-cpu" rank="1024">
-            <!-- TODO: implement a mechanism to prevent AV1 Decoder usage on pre-U devices -->
             <Limit name="alignment" value="1x1" />
             <Limit name="block-size" value="16x16" />
-            <Variant name="!slow-cpu">
-                <Limit name="size" min="2x2" max="2048x2048" />
-                <Limit name="block-count" range="1-8192" /> <!-- max 2048x1024 -->
-                <Limit name="blocks-per-second" range="1-245760" />
-                <Limit name="bitrate" range="1-40000000" />
-            </Variant>
-            <Variant name="slow-cpu">
-                <Limit name="size" min="2x2" max="1280x1280" />
-                <Limit name="block-count" range="1-3600" /> <!-- max 1280x720 -->
-                <Limit name="blocks-per-second" range="1-108000" />
-                <Limit name="bitrate" range="1-5000000" />
-            </Variant>
+            <Limit name="size" min="2x2" max="352x288" />
+            <Limit name="block-count" range="1-396" />
+            <Limit name="blocks-per-second" range="1-11880" />
+            <Limit name="bitrate" range="1-500000" />
             <Feature name="adaptive-playback" />
             <Feature name="dynamic-color-aspects" />
             <Feature name="low-latency" />
