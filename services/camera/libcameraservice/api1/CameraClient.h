@@ -177,6 +177,7 @@ private:
     int                             mPreviewCallbackFlag;
     int                             mOrientation;     // Current display orientation
     bool                            mPlayShutterSound;
+    bool                            mPlayRecordingSound;
     bool                            mLegacyMode; // camera2 api legacy mode?
 
     // Ensures atomicity among the public methods

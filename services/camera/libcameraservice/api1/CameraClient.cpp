@@ -32,6 +32,17 @@ namespace android {
 #define LOG1(...) ALOGD_IF(gLogLevel >= 1, __VA_ARGS__);
 #define LOG2(...) ALOGD_IF(gLogLevel >= 2, __VA_ARGS__);
 
+// Sony camera apps pass the shutter and recording sound files, or "off", through these parameters.
+static const char* kSonyShutterSoundKey = "key-sony-ext-shuttersound";
+static const char* kSonyRecordingSoundKey = "key-sony-ext-recordingsound";
+
+static bool soundEnabledByParameter(const CameraParameters& params, const char* key, bool current) {
+    const char* value = params.get(key);
+    if (value == nullptr) return current;
+    if (property_get_bool("ro.camera.sound.forced", 0)) return true;
+    return strcmp(value, "off") != 0;
+}
+
 CameraClient::CameraClient(const sp<CameraService>& cameraService,
         const sp<hardware::ICameraClient>& cameraClient,
         std::shared_ptr<CameraServiceProxyWrapper> cameraServiceProxyWrapper,
@@ -58,6 +69,7 @@ CameraClient::CameraClient(const sp<CameraService>& cameraService,
     mPreviewCallbackFlag = CAMERA_FRAME_CALLBACK_FLAG_NOOP;
     mOrientation = getOrientation(0, mCameraFacing == CAMERA_FACING_FRONT);
     mPlayShutterSound = true;
+    mPlayRecordingSound = true;
     LOG1("CameraClient::CameraClient X (pid %d, id %d)", callingPid, cameraId);
 }
 
@@ -463,7 +475,9 @@ status_t CameraClient::startRecordingMode() {
 
     // start recording mode
     enableMsgType(CAMERA_MSG_VIDEO_FRAME);
-    sCameraService->playSound(CameraService::SOUND_RECORDING_START);
+    if (mPlayRecordingSound) {
+        sCameraService->playSound(CameraService::SOUND_RECORDING_START);
+    }
     result = mHardware->startRecording();
     if (result != NO_ERROR) {
         ALOGE("mHardware->startRecording() failed with status %d", result);
@@ -498,7 +512,9 @@ void CameraClient::stopRecording() {
 
         disableMsgType(CAMERA_MSG_VIDEO_FRAME);
         mHardware->stopRecording();
-        sCameraService->playSound(CameraService::SOUND_RECORDING_STOP);
+        if (mPlayRecordingSound) {
+            sCameraService->playSound(CameraService::SOUND_RECORDING_STOP);
+        }
 
         mPreviewBuffer.clear();
     }
@@ -703,6 +719,8 @@ status_t CameraClient::setParameters(const String8& params) {
 
     mLatestSetParameters = CameraParameters(params);
     CameraParameters p(params);
+    mPlayShutterSound = soundEnabledByParameter(p, kSonyShutterSoundKey, mPlayShutterSound);
+    mPlayRecordingSound = soundEnabledByParameter(p, kSonyRecordingSoundKey, mPlayRecordingSound);
     return mHardware->setParameters(p);
 }
 
