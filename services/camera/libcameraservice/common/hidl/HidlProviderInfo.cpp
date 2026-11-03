@@ -1052,6 +1052,29 @@ status_t HidlProviderInfo::HidlDeviceInfo1::getCameraInfo(
     return OK;
 }
 
+status_t HidlProviderInfo::HidlDeviceInfo1::getCameraCharacteristics(
+        bool /*overrideForPerfClass*/, CameraMetadata *characteristics,
+        const CameraCompatibilityInfo& /*compatInfo*/) {
+    if (characteristics == nullptr) return BAD_VALUE;
+
+    uint8_t facing = mInfo.facing == hardware::CAMERA_FACING_FRONT ?
+            ANDROID_LENS_FACING_FRONT : ANDROID_LENS_FACING_BACK;
+    int32_t orientation = mInfo.orientation;
+    uint8_t flashAvailable = mHasFlashUnit ?
+            ANDROID_FLASH_INFO_AVAILABLE_TRUE : ANDROID_FLASH_INFO_AVAILABLE_FALSE;
+    uint8_t hardwareLevel = ANDROID_INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY;
+    uint8_t capabilities = ANDROID_REQUEST_AVAILABLE_CAPABILITIES_READ_SENSOR_SETTINGS;
+
+    characteristics->clear();
+    characteristics->update(ANDROID_LENS_FACING, &facing, 1);
+    characteristics->update(ANDROID_SENSOR_ORIENTATION, &orientation, 1);
+    characteristics->update(ANDROID_FLASH_INFO_AVAILABLE, &flashAvailable, 1);
+    characteristics->update(ANDROID_INFO_SUPPORTED_HARDWARE_LEVEL, &hardwareLevel, 1);
+    // No BACKWARD_COMPATIBLE: there are no stream configurations, the device is API1 only
+    characteristics->update(ANDROID_REQUEST_AVAILABLE_CAPABILITIES, &capabilities, 1);
+    return OK;
+}
+
 sp<hardware::camera::device::V1_0::ICameraDevice>
 HidlProviderInfo::HidlDeviceInfo1::startDeviceInterface() {
     Mutex::Autolock l(mDeviceAvailableLock);

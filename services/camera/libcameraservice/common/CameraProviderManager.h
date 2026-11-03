@@ -432,6 +432,8 @@ public:
     // Whether a provider implementing openLegacy() publishes a HALv1 device for this id.
     bool hasHal1Device(const std::string& id) const;
 
+    bool isHal1OnlyDevice(const std::string& id) const;
+
     // For HALv1 the device interface itself acts as the session.
     status_t openHidlSession1(const std::string &id,
             const sp<hardware::camera::device::V1_0::ICameraDeviceCallback>& callback,
@@ -935,6 +937,8 @@ private:
 
     // Same, for the HALv1 devices that findDeviceInfoLocked() filters out by version.
     ProviderInfo::DeviceInfo* findDeviceInfo1Locked(const std::string& id) const;
+
+    ProviderInfo::DeviceInfo* findDeviceInfoOrHal1Locked(const std::string& id) const;
 
     bool isCompositeJpegRDisabledLocked(const std::string &id) const;
     bool isCompositeHeicDisabledLocked(const std::string &id) const;
