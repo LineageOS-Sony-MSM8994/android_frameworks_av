@@ -1576,6 +1576,7 @@ Status CameraService::makeClient(
         int deviceVersion = deviceVersionAndTransport.first;
         switch(deviceVersion) {
             case CAMERA_DEVICE_API_VERSION_1_0:
+                if (effectiveApiLevel == API_1) break;
                 ALOGE("Camera using old HAL version: %d", deviceVersion);
                 return STATUS_ERROR_FMT(ERROR_DEPRECATED_HAL,
                         "Camera device \"%s\" HAL version %d no longer supported",
@@ -1605,11 +1606,13 @@ Status CameraService::makeClient(
     if (effectiveApiLevel == API_1) { // Camera1 API route
         sp<ICameraClient> tmp = static_cast<ICameraClient*>(cameraCb.get());
 
-        // Opt-in: serve API1 from the HALv1 device of providers implementing openLegacy(),
-        // whose vendor Camera1 parameters can offer modes the HALv3 path does not.
-        if (property_get_bool("persist.camera.hal1.api1", false) &&
-                cameraService->mCameraProviderManager != nullptr &&
-                cameraService->mCameraProviderManager->hasHal1Device(cameraId)) {
+        // Serve API1 from the HALv1 device of providers implementing openLegacy() (opt-in: their
+        // vendor Camera1 parameters can offer modes the HALv3 path does not), or of HALv1-only
+        // cameras.
+        if (cameraService->mCameraProviderManager != nullptr &&
+                cameraService->mCameraProviderManager->hasHal1Device(cameraId) &&
+                (property_get_bool("persist.camera.hal1.api1", false) ||
+                 cameraService->mCameraProviderManager->isHal1OnlyDevice(cameraId))) {
             ALOGI("%s: Camera %s: using the HALv1 client for the API1 route",
                     __FUNCTION__, cameraId.c_str());
             *client = new CameraClient(cameraService, tmp,

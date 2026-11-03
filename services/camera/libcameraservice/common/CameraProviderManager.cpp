@@ -373,7 +373,7 @@ bool CameraProviderManager::isValidDeviceLocked(const std::string &id, uint16_t 
 bool CameraProviderManager::hasFlashUnit(const std::string &id) const {
     std::lock_guard<std::mutex> lock(mInterfaceMutex);
 
-    auto deviceInfo = findDeviceInfoLocked(id);
+    auto deviceInfo = findDeviceInfoOrHal1Locked(id);
     if (deviceInfo == nullptr) return false;
 
     return deviceInfo->hasFlashUnit();
@@ -428,7 +428,7 @@ status_t CameraProviderManager::getResourceCost(const std::string &id,
         CameraResourceCost* cost) const {
     std::lock_guard<std::mutex> lock(mInterfaceMutex);
 
-    auto deviceInfo = findDeviceInfoLocked(id);
+    auto deviceInfo = findDeviceInfoOrHal1Locked(id);
     if (deviceInfo == nullptr) return NAME_NOT_FOUND;
 
     *cost = deviceInfo->mResourceCost;
@@ -440,7 +440,7 @@ status_t CameraProviderManager::getCameraInfo(const std::string &id,
          hardware::CameraInfo* info) const {
     std::lock_guard<std::mutex> lock(mInterfaceMutex);
 
-    auto deviceInfo = findDeviceInfoLocked(id);
+    auto deviceInfo = findDeviceInfoOrHal1Locked(id);
     if (deviceInfo == nullptr) return NAME_NOT_FOUND;
 
     return deviceInfo->getCameraInfo(compatInfo, portraitRotation, info);
@@ -526,7 +526,7 @@ status_t CameraProviderManager::getSessionCharacteristics(
 status_t CameraProviderManager::getCameraIdIPCTransport(const std::string &id,
         IPCTransport *providerTransport) const {
     std::lock_guard<std::mutex> lock(mInterfaceMutex);
-    auto deviceInfo = findDeviceInfoLocked(id);
+    auto deviceInfo = findDeviceInfoOrHal1Locked(id);
     if (deviceInfo == nullptr) {
         return NAME_NOT_FOUND;
     }
@@ -649,7 +649,7 @@ status_t CameraProviderManager::setTorchModeT(sp<ProviderInfo> &parentProvider,
 status_t CameraProviderManager::setTorchMode(const std::string &id, bool enabled) {
     std::lock_guard<std::mutex> lock(mInterfaceMutex);
 
-    auto deviceInfo = findDeviceInfoLocked(id);
+    auto deviceInfo = findDeviceInfoOrHal1Locked(id);
     if (deviceInfo == nullptr) return NAME_NOT_FOUND;
 
     // Pass the camera ID to start interface so that it will save it to the map of ICameraProviders
@@ -923,6 +923,11 @@ bool CameraProviderManager::hasHal1Device(const std::string& id) const {
     return findDeviceInfo1Locked(id) != nullptr;
 }
 
+bool CameraProviderManager::isHal1OnlyDevice(const std::string& id) const {
+    std::lock_guard<std::mutex> lock(mInterfaceMutex);
+    return findDeviceInfoLocked(id) == nullptr && findDeviceInfo1Locked(id) != nullptr;
+}
+
 status_t CameraProviderManager::openHidlSession1(const std::string &id,
         const sp<device::V1_0::ICameraDeviceCallback>& callback,
         /*out*/
@@ -1139,6 +1144,12 @@ CameraProviderManager::ProviderInfo::DeviceInfo* CameraProviderManager::findDevi
         }
     }
     return nullptr;
+}
+
+CameraProviderManager::ProviderInfo::DeviceInfo* CameraProviderManager::findDeviceInfoOrHal1Locked(
+        const std::string& id) const {
+    auto deviceInfo = findDeviceInfoLocked(id);
+    return deviceInfo != nullptr ? deviceInfo : findDeviceInfo1Locked(id);
 }
 
 metadata_vendor_id_t CameraProviderManager::getProviderTagIdLocked(
@@ -2418,7 +2429,7 @@ status_t CameraProviderManager::getSystemCameraKind(const std::string& id,
 
 status_t CameraProviderManager::getSystemCameraKindLocked(const std::string& id,
         SystemCameraKind *kind) const {
-    auto deviceInfo = findDeviceInfoLocked(id);
+    auto deviceInfo = findDeviceInfoOrHal1Locked(id);
     if (deviceInfo != nullptr) {
         *kind = deviceInfo->mSystemCameraKind;
         return OK;
@@ -3732,7 +3743,7 @@ status_t CameraProviderManager::isConcurrentSessionConfigurationSupported(
 status_t CameraProviderManager::getCameraCharacteristicsLocked(const std::string &id,
         bool overrideForPerfClass, CameraMetadata* characteristics,
         const CameraCompatibilityInfo& compatInfo) const {
-    auto deviceInfo = findDeviceInfoLocked(id);
+    auto deviceInfo = findDeviceInfoOrHal1Locked(id);
     if (deviceInfo != nullptr) {
         return deviceInfo->getCameraCharacteristics(overrideForPerfClass, characteristics,
                  compatInfo);

@@ -140,6 +140,9 @@ struct HidlProviderInfo : public CameraProviderManager::ProviderInfo,
         virtual status_t warmUp() override {return OK;};// Not implemented
         virtual status_t getCameraInfo(const CameraCompatibilityInfo& compatInfo,
                 int *portraitRotation, hardware::CameraInfo *info) const override;
+        virtual status_t getCameraCharacteristics(bool overrideForPerfClass,
+                CameraMetadata *characteristics,
+                const CameraCompatibilityInfo& compatInfo) override;
         //In case of Device1Info assume that we are always API1 compatible
         virtual bool isAPI1Compatible() const override { return true; }
         virtual status_t dumpState(int fd) override;
